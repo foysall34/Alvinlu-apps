@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Report</title>
+    <style>
+        @page { size: A4; margin: 1.5cm; }
+        body { font-family: sans-serif; color: #333; }
+        h1 { text-align: center; color: #111; border-bottom: 2px solid #f2f2f2; padding-bottom: 10px; }
+        h2 { color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 40px;}
+        .client-block { page-break-inside: avoid; }
+        .task-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .task-table th, .task-table td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px;}
+        .task-table th { background-color: #f8f8f8; }
+        .uid { font-family: monospace; font-size: 12px; color: #555; background-color: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
+        .no-tasks { color: #888; font-style: italic; }
+        .footer { text-align: center; position: fixed; bottom: -30px; font-size: 10px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="footer">
+        Report Generated on: {{ generation_date }}
+    </div>
+
+    <h1>Task Report</h1>
+    
+    {% for client in clients %}
+        <div class="client-block">
+            <h2>Client UID: <span class="uid">{{ client.uid }}</span></h2>
+            {% if client.filtered_tasks %}
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>Task Name</th>
+                            <th>Target Time</th>
+                            <th>Completion %</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in client.filtered_tasks %}
+                            <tr>
+                                <td>{{ task.task_name }}</td>
+                                <td>{{ task.target_time }}</td>
+                                <td>{{ task.completion_percentage }}%</td>
+                                <td>{{ task.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="no-tasks">No tasks found for this client in the selected period.</p>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No clients found for the given UIDs.</p>
+    {% endfor %}
+</body>
+</html>
