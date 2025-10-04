@@ -11,7 +11,7 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 
 from django.db.models import Prefetch
-
+import os
 
 class FilterClientTasksByDateView(APIView):
     def post(self, request, *args, **kwargs):
@@ -239,10 +239,21 @@ from reportlab.lib.units import inch
 
 from PIL import Image
 
+
+
+
+
+
+
 class GeneratePdfApiView(APIView):
     def post(self, request, *args, **kwargs):
-        uids = request.data.get('uids') 
-        date_filter = request.data.get('date_filter') 
+        # --- User and Subscription Check ---
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"error": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        uids = request.data.get('uids')
+        date_filter = request.data.get('date_filter')
 
         if not uids or not isinstance(uids, list):
             return Response({"error": "A list of UIDs is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -253,9 +264,9 @@ class GeneratePdfApiView(APIView):
 
         if date_filter == 'today':
             start_date = today
-        elif date_filter == 'recent': 
+        elif date_filter == 'recent':
             start_date = today - timedelta(days=1)
-        elif date_filter == 'this_week': 
+        elif date_filter == 'this_week':
             start_date = today - timedelta(days=6)
 
         clients = Client.objects.filter(uid__in=uids)
@@ -266,7 +277,6 @@ class GeneratePdfApiView(APIView):
 
         pdf_folder = os.path.join(settings.MEDIA_ROOT, 'pdfs')
         os.makedirs(pdf_folder, exist_ok=True)
-        
 
         unique_filename = f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.pdf"
         pdf_path = os.path.join(pdf_folder, unique_filename)
@@ -274,8 +284,7 @@ class GeneratePdfApiView(APIView):
         c = canvas.Canvas(pdf_path, pagesize=letter)
         width, height = letter
         
-        y_position = height - inch 
-
+        y_position = height - inch
 
         def new_page():
             c.showPage()
@@ -284,13 +293,10 @@ class GeneratePdfApiView(APIView):
             c.drawString(inch, y, "Tasks List (Continued):")
             return y - 0.3 * inch
 
- 
         for i, client in enumerate(clients):
- 
             if i > 0:
                 y_position = new_page()
 
-  
             c.setFont("Helvetica-Bold", 16)
             c.drawString(inch, y_position, f"Task Report for Client: {client.uid}")
             y_position -= 0.3 * inch
@@ -305,12 +311,10 @@ class GeneratePdfApiView(APIView):
 
             tasks = client.tasks.all()
 
- 
             if start_date:
                 tasks = tasks.filter(created_at__date__gte=start_date, created_at__date__lte=today)
 
             for task in tasks:
-
                 if y_position < 2 * inch:
                     y_position = new_page()
 
@@ -364,19 +368,29 @@ class GeneratePdfApiView(APIView):
                              c.drawString(1.4 * inch, y_position, f"[Could not display image: {e}]")
                              y_position -= 0.2 * inch
 
-                y_position -= 0.2 * inch 
+                y_position -= 0.2 * inch
 
         c.save()
 
-    
+        # --- Download Limit Logic ---
+        if not user.is_subscribed:
+            pdf_size_bytes = os.path.getsize(pdf_path)
+            pdf_size_gb = pdf_size_bytes / (1024 * 1024 * 1024)
+
+            if user.downloaded_gb + pdf_size_gb > 1.0:
+                os.remove(pdf_path)  
+                return Response({"error": "You have downloaded 1 GB, buy premium plan."}, status=status.HTTP_403_FORBIDDEN)
+
+            # Update user's downloaded amount
+            user.downloaded_gb += pdf_size_gb
+            user.save()
+
         pdf_url = request.build_absolute_uri(os.path.join(settings.MEDIA_URL, 'pdfs', unique_filename))
         return Response({'pdf_link': pdf_url}, status=status.HTTP_200_OK)
-    
-
 
 
 # For multiple uid, today , recent , this weeek task pdf 
-import os
+
 import uuid
 from datetime import timedelta
 from django.conf import settings
@@ -582,6 +596,7 @@ class DashboardAnalyticsView(APIView):
                 )
              
                 completion_percentage = min(round(analysis['avg_completion'] or 0), 100)
+       
                 
                 step_analysis_data.append({
                     "name": name,
