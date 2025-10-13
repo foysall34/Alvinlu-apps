@@ -39,8 +39,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Free')
     is_subscribed = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False) 
-    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=False) #false by default
+    is_staff = models.BooleanField(default=False) #false by deafult
     downloaded_gb = models.FloatField(default=0.0)
     
     otp = models.CharField(max_length=4, blank=True, null=True)

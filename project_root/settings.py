@@ -18,7 +18,7 @@ SECRET_KEY = 'django-insecure-$5h3i2#$qg#58b1)j00cluqvel2&rp_e^fp**(8f&xyl)!$l71
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['206.162.244.174' ,  "localhost", "127.0.0.1" , '0.0.0.0' ,'www.tickin.tools','tickin.tools' ]
 
 
 # Application definition
@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     # app 
 
     'accounts' ,
-    'removal',
+    'removal.apps.RemovalConfig', 
     # framework 
     'rest_framework',
 ]
@@ -150,8 +150,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+STATIC_URL = '/static/'
+
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
+STATICFILES_DIRS = [
+    # os.path.join(BASE_DIR, 'assets'),  # if need
+    # os.path.join(BASE_DIR, 'some_app/static'), 
+]
+
+
+
 MEDIA_URL = '/media/'
+
+import os
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

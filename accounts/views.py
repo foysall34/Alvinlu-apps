@@ -138,7 +138,7 @@ class PasswordResetRequestView(APIView):
                 send_otp_via_email(user.email, new_otp)
             except User.DoesNotExist:
                 pass
-            return Response({'msg': 'If an account with this email exists, an OTP has been sent.'}, status=status.HTTP_200_OK)
+            return Response({'message': 'OTP has been sent.'}, status=status.HTTP_200_OK)
 
 
 class PasswordResetConfirmView(APIView):

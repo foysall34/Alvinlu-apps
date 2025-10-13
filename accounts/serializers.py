@@ -36,6 +36,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 user.save()
                 
                 send_otp_via_email(user.email, new_otp)
+             
                 return user
         else:
             new_user = User.objects.create_user(**validated_data)

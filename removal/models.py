@@ -1,7 +1,18 @@
 from django.db import models
 import uuid
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class Client(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='clients', null=True
+    )
+    
     uid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -29,7 +40,7 @@ class TaskImage(models.Model):
     
 
 class TaskBoiler(models.Model):
-    client = models.ForeignKey(Client, related_name='taskds', on_delete=models.CASCADE , null= True )  
+    client = models.ForeignKey(Client, related_name='taskds', on_delete=models.CASCADE , null= True ,blank= True)  
     task_name = models.CharField(max_length=200)
     current_time = models.DurationField()
     target_time = models.DurationField()
